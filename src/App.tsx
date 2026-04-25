@@ -4,32 +4,189 @@
  */
 
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'motion/react';
-import { useRef, useEffect } from 'react';
-import { ChevronDown, ExternalLink, Quote, Sparkles, Zap, Layers, Globe, Code2 } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
+import { ChevronDown, ExternalLink, Quote, Sparkles, Zap, Layers, Globe, Code2, Flame, ArrowRight } from 'lucide-react';
 import Face3D from './components/Face3D';
 import SkillsGrid from './components/SkillsGrid';
 import Dock from './components/Dock';
 
 const COMPANIES = [
-  { name: "StarFox", role: "Design Agency", desc: "Crafting immersive visual narratives.", color: "#818cf8" },
-  { name: "Wes", role: "Web Solutions", desc: "Scalable architectures for the modern web.", color: "#34d399" },
-  { name: "BlueMoon", role: "Creative House", desc: "Where artistic chaos meets order.", color: "#fb7185" }
+  { 
+    name: "StarFox", 
+    role: "Web Development", 
+    desc: "Orange-tinted minimalism. Precision in every pixel.", 
+    color: "#ff8c00",
+    theme: "orange",
+    icon: Sparkles,
+    bg: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800"
+  },
+  { 
+    name: "Wes", 
+    role: "Coding Systems", 
+    desc: "Srilankan Yakkha energy. Fire and Performance.", 
+    color: "#ef4444",
+    theme: "red",
+    icon: Flame,
+    bg: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800"
+  },
+  { 
+    name: "BlueMoon", 
+    role: "Design Studio", 
+    desc: "Cool, calm, and bluish. The depth of design.", 
+    color: "#3178C6",
+    theme: "blue",
+    icon: Layers,
+    bg: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800"
+  }
 ];
 
+function Marquee({ text, speed = 15, direction = "left", className = "" }: { text: string, speed?: number, direction?: "left"|"right", className?: string }) {
+  return (
+    <div className={`flex overflow-hidden select-none ${className}`}>
+      <motion.div 
+        animate={{ x: direction === "left" ? ["0%", "-50%"] : ["-50%", "0%"] }}
+        transition={{ duration: speed, repeat: Infinity, ease: "linear" }}
+        className="flex whitespace-nowrap gap-24 py-12"
+      >
+        {[...Array(4)].map((_, i) => (
+          <span key={i} className="text-[15vw] font-display font-extrabold tracking-tighter uppercase font-outline opacity-10 leading-none">
+            {text} • 
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function HorizontalScroll() {
+  const targetRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+  });
+
+  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-66.6%"]);
+  
+  // Dynamic scale for the whole track
+  const scale = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [0.8, 1, 1, 0.8]);
+
+  return (
+    <section ref={targetRef} className="relative h-[400vh] bg-transparent">
+      <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+        <motion.div style={{ x, scale }} className="flex gap-4 px-12 md:px-24">
+          {COMPANIES.map((co, i) => (
+            <div key={co.name} className="w-screen h-[80vh] flex-shrink-0 flex items-center justify-center">
+               <VentureCard co={co} i={i} />
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function VentureCard({ co, i }: { co: typeof COMPANIES[0], i: number }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const { scrollY } = useScroll();
+  const [velocity, setVelocity] = useState(0);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const update = () => {
+      const currentY = window.scrollY;
+      const vel = currentY - lastY;
+      setVelocity(vel);
+      lastY = currentY;
+      requestAnimationFrame(update);
+    };
+    const anim = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(anim);
+  }, []);
+
+  const skewX = useSpring(velocity * 0.05, { damping: 20, stiffness: 100 });
+  const scale = useSpring(isHovered ? 1.05 : 1, { damping: 15, stiffness: 100 });
+  
+  return (
+    <motion.div 
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      style={{
+        skewX,
+        scale,
+        backgroundColor: isHovered ? `${co.color}15` : 'rgba(255,255,255,0.02)',
+        borderColor: isHovered ? co.color : 'rgba(255,255,255,0.05)'
+      }}
+      className="relative w-[85vw] md:w-[70vw] h-full glass rounded-[5rem] group cursor-pointer overflow-hidden transition-all duration-700 shadow-3xl"
+    >
+      <div className="absolute inset-0 z-0">
+         <img src={co.bg} className={`w-full h-full object-cover grayscale transition-all duration-1000 ${isHovered ? 'scale-110 grayscale-0 opacity-40' : 'opacity-10'}`} />
+         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+      </div>
+
+      {isHovered && co.name === "Wes" && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.2 }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <Flame className="w-[50vw] h-[50vw] text-red-500 opacity-20 rotate-[-15deg]" />
+        </motion.div>
+      )}
+
+      {isHovered && co.name === "StarFox" && (
+        <div className="absolute inset-0 pointer-events-none">
+           <div className="absolute top-0 right-0 w-full h-full border-r-[30vw] border-orange-500/10 skew-x-[-30deg] translate-x-1/2" />
+        </div>
+      )}
+
+      <div className="relative z-10 p-12 md:p-24 flex flex-col justify-between h-full">
+        <div className="flex justify-between items-start">
+          <span className="text-xs font-mono opacity-40 tracking-[1em] uppercase">ENTITY_0{i+1}</span>
+          <co.icon className={`w-16 h-16 transition-all duration-700 ${isHovered ? 'scale-125' : 'opacity-20'}`} style={{ color: isHovered ? co.color : 'white' }} />
+        </div>
+        
+        <div>
+          <h3 className="text-7xl md:text-[8vw] font-display font-bold tracking-tighter mb-8 group-hover:tracking-widest transition-all duration-1000 ease-in-out">{co.name}</h3>
+          <div className="flex flex-wrap gap-8 items-center mb-12">
+            <span className="text-sm opacity-40 uppercase tracking-[0.5em]">{co.role}</span>
+            <div className="w-20 h-px bg-white/20" />
+            <p className="text-2xl md:text-3xl font-light opacity-60 max-w-2xl">
+              {co.desc}
+            </p>
+          </div>
+
+          <motion.div 
+            animate={{ x: isHovered ? 20 : 0, opacity: isHovered ? 1 : 0.4 }}
+            className="flex items-center gap-6"
+          >
+            <div className="p-8 rounded-full border border-white/20 group-hover:bg-white transition-colors">
+              <ArrowRight className="w-8 h-8 group-hover:text-black transition-colors" />
+            </div>
+            <span className="text-lg font-bold tracking-[0.5em] uppercase">Enter Collision</span>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function FloatingPhrase({ text, initialPos }: { text: string, initialPos: { x: string, y: string } }) {
+  const { scrollY } = useScroll();
+  const yParallax = useTransform(scrollY, [0, 3000], [0, (Math.random() - 0.5) * 500]);
+  
   return (
     <motion.div
-      initial={{ x: initialPos.x, y: initialPos.y, opacity: 0 }}
+      initial={{ x: initialPos.x, opacity: 0 }}
       animate={{ 
-        y: ["0%", "-20%"],
+        y: ["0%", "-30%"],
         opacity: [0, 0.4, 0] 
       }}
       transition={{ 
-        duration: 15 + Math.random() * 10,
+        duration: 12 + Math.random() * 15,
         repeat: Infinity,
         ease: "linear"
       }}
-      className="absolute pointer-events-none text-[8px] tracking-[1.5em] uppercase font-bold font-outline whitespace-nowrap z-0 select-none"
+      style={{ y: yParallax }}
+      className="absolute pointer-events-none text-[7px] tracking-[2em] uppercase font-bold font-outline whitespace-nowrap z-0 select-none"
     >
       {text}
     </motion.div>
@@ -43,28 +200,60 @@ function SectionReveal({ children, className = "", id = "" }: { children: React.
     offset: ["start end", "end start"]
   });
 
-  const scale = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [0.85, 1, 1, 0.85]);
-  const opacity = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [0, 1, 1, 0]);
-  const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [30, 0, -30]);
-  const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.6, 1, 0.6]);
+  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
+  const z = useTransform(scrollYProgress, [0, 0.5, 1], [-1200, 0, -1200]);
 
   return (
     <motion.section 
       id={id}
       ref={ref}
-      style={{ scale, opacity, rotateX, y, perspective: "1500px" }}
-      className={`relative min-h-[140vh] flex items-center justify-center py-40 ${className}`}
+      style={{ scale, opacity, z, transformStyle: "preserve-3d" }}
+      className={`relative min-h-screen flex items-center justify-center py-40 ${className}`}
     >
       {children}
     </motion.section>
   );
 }
 
-const EXPERIENCES = [
-  { year: "2024", title: "Lead Architect", company: "StarFox" },
-  { year: "2023", title: "Systems Dev", company: "Wes" },
-  { year: "2022", title: "Visual Designer", company: "BlueMoon" }
+const TESTIMONIALS = [
+  { text: "THEY TURNED OUR TECHNICAL DEBT INTO A LIQUID ART PIECE.", author: "STARFOX LABS" },
+  { text: "RAREST COMBINATION OF YAKKHA STRENGTH AND SWISS PRECISION.", author: "WES ARCHITECTS" },
+  { text: "JAYAS DOES NOT JUST WRITE CODE; THEY ARCHITECT EXPERIENCES.", author: "BLUEMOON" },
+  { text: "FLUID DYNAMICS APPLIED TO USER INTERFACE. MINDBLOWING.", author: "QUANTUM TECH" }
 ];
+
+function Testimonials() {
+  const targetRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+    offset: ["start end", "end start"]
+  });
+
+  const x1 = useTransform(scrollYProgress, [0, 1], ["20%", "-20%"]);
+  const x2 = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
+
+  return (
+    <section ref={targetRef} className="py-40 bg-white/2 overflow-hidden border-y border-white/5">
+      <motion.div style={{ x: x1 }} className="flex whitespace-nowrap gap-24 mb-12">
+        {TESTIMONIALS.map((t, i) => (
+          <div key={i} className="flex flex-col gap-4">
+            <span className="text-[8vw] font-display font-extrabold tracking-tighter opacity-20">{t.text}</span>
+            <span className="text-xl tracking-[0.5em] font-mono opacity-40">— {t.author}</span>
+          </div>
+        ))}
+      </motion.div>
+      <motion.div style={{ x: x2 }} className="flex whitespace-nowrap gap-24">
+        {TESTIMONIALS.map((t, i) => (
+          <div key={i} className="flex flex-col gap-4">
+            <span className="text-[8vw] font-display font-extrabold tracking-tighter opacity-20">{t.text}</span>
+            <span className="text-xl tracking-[0.5em] font-mono opacity-40">— {t.author}</span>
+          </div>
+        ))}
+      </motion.div>
+    </section>
+  );
+}
 
 export default function App() {
   const containerRef = useRef(null);
@@ -84,10 +273,10 @@ export default function App() {
 
       {/* Background Story Layer */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-        <FloatingPhrase text="ANTIGRAVITY SYSTEMS" initialPos={{ x: "10%", y: "80%" }} />
-        <FloatingPhrase text="LIQUID ARCHITECTURE" initialPos={{ x: "70%", y: "60%" }} />
-        <FloatingPhrase text="DIGITAL DYNAMICS" initialPos={{ x: "30%", y: "40%" }} />
-        <FloatingPhrase text="FLUID INTERFACES" initialPos={{ x: "80%", y: "20%" }} />
+        <FloatingPhrase text="STARFOX // DEVELOP" initialPos={{ x: "5%", y: "70%" }} />
+        <FloatingPhrase text="WES // ARCHITECTURE" initialPos={{ x: "85%", y: "40%" }} />
+        <FloatingPhrase text="BLUEMOON // DESIGN" initialPos={{ x: "25%", y: "20%" }} />
+        <FloatingPhrase text="YAKKHA ENERGY" initialPos={{ x: "60%", y: "90%" }} />
       </div>
 
       {/* Hero Section */}
@@ -125,106 +314,53 @@ export default function App() {
       </section>
 
       {/* Skills Orbit Section */}
-      <SectionReveal id="skills" className="flex-col">
-        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-10">
-            <h2 className="text-[30vw] font-display font-bold text-outline select-none">FLOW</h2>
+      <section id="skills" className="relative h-screen flex flex-col items-center justify-center">
+        <div className="absolute top-20 text-center z-10 pointer-events-none">
+          <h2 className="text-sm tracking-[0.8em] font-medium opacity-40 uppercase mb-8">Fluency Spectrum</h2>
+          <h3 className="text-5xl md:text-7xl font-display font-bold tracking-tighter px-8">
+            LIQUID INTELLIGENCE
+          </h3>
         </div>
-        <div className="relative z-10 w-full flex flex-col items-center glass p-8 md:p-24 rounded-[4rem] backdrop-blur-3xl mx-8 md:mx-24 max-w-[90vw]">
-           <div className="text-center mb-12">
-              <motion.div 
-                animate={{ rotate: 360 }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="inline-block p-4 rounded-full border border-white/10 mb-8"
-              >
-                <Code2 className="w-8 h-8 text-indigo-400" />
-              </motion.div>
-              <h3 className="text-lg tracking-[0.5em] font-light opacity-40 uppercase mb-4">Fluency</h3>
-              <p className="text-5xl md:text-7xl font-display font-bold tracking-tighter max-w-2xl mx-auto">
-                WHERE LOGIC TRANSFORMS INTO LIQUID.
-              </p>
-           </div>
-           <SkillsGrid />
+        <div className="w-full h-full">
+          <SkillsGrid />
         </div>
-      </SectionReveal>
+      </section>
 
-      {/* Experience Stacking Section */}
-      <SectionReveal className="flex-col px-8">
-        <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-24">
-           <div>
-             <h2 className="text-6xl font-display font-bold tracking-tighter mb-12">LEGACY.</h2>
-             <div className="flex flex-col gap-px bg-white/5 border border-white/5 rounded-3xl overflow-hidden glass">
-                {EXPERIENCES.map((ex, i) => (
-                  <motion.div 
-                    key={i}
-                    whileHover={{ backgroundColor: "rgba(255,255,255,0.05)" }}
-                    className="p-12 flex justify-between items-center group cursor-pointer"
-                  >
-                    <div className="flex flex-col gap-2">
-                       <span className="text-xs font-mono opacity-40">{ex.year}</span>
-                       <h3 className="text-2xl font-display font-bold tracking-tight">{ex.title}</h3>
-                    </div>
-                    <div className="text-right">
-                       <span className="text-lg opacity-40 group-hover:opacity-100 transition-opacity">{ex.company}</span>
-                    </div>
-                  </motion.div>
-                ))}
-             </div>
-           </div>
-           <div className="flex flex-col justify-center gap-12">
-              <div className="glass p-12 rounded-[2rem] relative overflow-hidden group">
-                 <Zap className="absolute -right-8 -top-8 w-40 h-40 opacity-5 group-hover:rotate-12 transition-transform duration-1000" />
-                 <h4 className="text-sm tracking-[0.5em] opacity-40 uppercase mb-6">Philosophy</h4>
-                 <p className="text-2xl font-light leading-relaxed">
-                   High-performance code is just the skeleton. Emotive interaction is the soul. I build systems that feel alive.
-                 </p>
-              </div>
-              <div className="grid grid-cols-2 gap-8">
-                 <div className="glass p-8 rounded-2xl flex flex-col gap-4">
-                    <Globe className="w-6 h-6 text-indigo-400" />
-                    <span className="text-3xl font-display font-bold">50+</span>
-                    <span className="text-[10px] opacity-40 tracking-widest uppercase">Global Clients</span>
-                 </div>
-                 <div className="glass p-8 rounded-2xl flex flex-col gap-4">
-                    <Layers className="w-6 h-6 text-emerald-400" />
-                    <span className="text-3xl font-display font-bold">100k+</span>
-                    <span className="text-[10px] opacity-40 tracking-widest uppercase">Lines Written</span>
-                 </div>
-              </div>
-           </div>
-        </div>
-      </SectionReveal>
+      <Marquee text="TRUSTED BY DISRUPTORS • BUILT FOR INNOVATORS • SCALED FOR GIANTS" speed={40} className="bg-white/2 py-24 mb-40" />
+      <Testimonials />
 
       {/* Ventures Section */}
-      <SectionReveal id="work" className="px-8 md:px-24">
-        <div className="max-w-7xl w-full">
-          <div className="flex justify-between items-end mb-24 border-b border-white/5 pb-12">
-             <h2 className="text-7xl font-display font-bold tracking-tighter">VENTURES.</h2>
-             <Sparkles className="w-8 h-8 opacity-20" />
+      <section id="work" className="py-20 flex flex-col gap-24">
+        <div className="px-8 md:px-24">
+           <h2 className="text-9xl font-display font-bold tracking-tighter border-b border-white/5 pb-12">ENTITIES</h2>
+        </div>
+        <HorizontalScroll />
+      </section>
+
+      <Marquee text="INNOVATE • DISRUPT • EVOLVE • COLLIDE" speed={30} className="bg-white/5 py-20" />
+
+      {/* Creative Ethos - Perspective Reveal */}
+      <SectionReveal className="px-8 overflow-hidden">
+        <div className="max-w-7xl w-full glass p-24 md:p-40 rounded-[6rem] relative">
+          <div className="absolute top-12 right-12 opacity-5 text-[20vw] font-bold font-display pointer-events-none select-none">
+            EYE
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {COMPANIES.map((co, i) => (
-              <motion.div 
-                key={i}
-                whileHover={{ y: -20, scale: 1.05 }}
-                className="glass p-12 rounded-[3.5rem] group cursor-pointer relative"
-              >
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity mx-12 mb-8" 
-                  style={{ backgroundColor: co.color }}
-                />
-                <div className="flex justify-between items-start mb-24">
-                  <span className="text-[10px] font-mono opacity-40 tracking-widest">_VENTURE_{i+1}</span>
-                  <ExternalLink className="w-5 h-5 opacity-40" />
-                </div>
-                <div>
-                  <h3 className="text-4xl font-display font-bold tracking-tighter mb-4">{co.name}</h3>
-                  <p className="text-sm opacity-40 uppercase tracking-widest mb-6">{co.role}</p>
-                  <p className="text-base font-light leading-relaxed opacity-60">
-                    {co.desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+          <div className="relative z-10 flex flex-col gap-12">
+            <h2 className="text-7xl md:text-9xl font-display font-bold tracking-tighter leading-[0.8]">
+              THE CODE<br/>IS LIQUID.
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-24 items-end">
+              <p className="text-2xl font-light leading-relaxed max-w-xl opacity-60">
+                 From the Yakkha-inspired raw power of StarFox to the tranquil depths of BlueMoon, my work exists in the tension between technical rigidity and organic grace.
+              </p>
+              <div className="flex flex-col gap-6 items-end">
+                 {["Creative Direction", "Systems Design", "Visual Dynamics"].map((s, i) => (
+                   <span key={i} className="text-xs tracking-[0.5em] uppercase font-bold border-r-4 border-white pr-8 py-2 hover:translate-x-4 transition-transform cursor-pointer">
+                     {s}
+                   </span>
+                 ))}
+              </div>
+            </div>
           </div>
         </div>
       </SectionReveal>

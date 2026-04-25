@@ -1,5 +1,6 @@
-import { motion } from 'motion/react';
+import { motion, useScroll, useSpring as useSpringOrig } from 'motion/react';
 import { Home, Briefcase, User, Mail, Sparkles, Code } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const NAV_ITEMS = [
   { icon: Home, label: "Hero", href: "#hero" },
@@ -10,8 +11,23 @@ const NAV_ITEMS = [
 ];
 
 export default function Dock() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpringOrig(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100]">
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-4">
+      {/* Scroll Progress Bar */}
+      <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+        <motion.div 
+          className="h-full bg-gradient-to-r from-indigo-500 to-sky-400 origin-left"
+          style={{ scaleX }}
+        />
+      </div>
+
       <motion.nav 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
