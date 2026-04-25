@@ -3,255 +3,272 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { motion } from 'motion/react';
-import { ArrowRight, Github, Twitter, Linkedin, Mail, ExternalLink, ChevronDown } from 'lucide-react';
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'motion/react';
+import { useRef, useEffect } from 'react';
+import { ChevronDown, ExternalLink, Quote, Sparkles, Zap, Layers, Globe, Code2 } from 'lucide-react';
 import Face3D from './components/Face3D';
+import SkillsGrid from './components/SkillsGrid';
+import Dock from './components/Dock';
 
-const PROJECTS = [
-  {
-    title: "NEO-DYNAMICS",
-    category: "INTERACTIVE DESIGN",
-    year: "2024",
-    link: "#",
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    title: "AETHER SYSTEM",
-    category: "GENERATIVE ART",
-    year: "2023",
-    link: "#",
-    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    title: "QUANTUM INTERFACE",
-    category: "UX RESEARCH",
-    year: "2023",
-    link: "#",
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800"
-  }
+const COMPANIES = [
+  { name: "StarFox", role: "Design Agency", desc: "Crafting immersive visual narratives.", color: "#818cf8" },
+  { name: "Wes", role: "Web Solutions", desc: "Scalable architectures for the modern web.", color: "#34d399" },
+  { name: "BlueMoon", role: "Creative House", desc: "Where artistic chaos meets order.", color: "#fb7185" }
+];
+
+function FloatingPhrase({ text, initialPos }: { text: string, initialPos: { x: string, y: string } }) {
+  return (
+    <motion.div
+      initial={{ x: initialPos.x, y: initialPos.y, opacity: 0 }}
+      animate={{ 
+        y: ["0%", "-20%"],
+        opacity: [0, 0.4, 0] 
+      }}
+      transition={{ 
+        duration: 15 + Math.random() * 10,
+        repeat: Infinity,
+        ease: "linear"
+      }}
+      className="absolute pointer-events-none text-[8px] tracking-[1.5em] uppercase font-bold font-outline whitespace-nowrap z-0 select-none"
+    >
+      {text}
+    </motion.div>
+  );
+}
+
+function SectionReveal({ children, className = "", id = "" }: { children: React.ReactNode, className?: string, id?: string }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+
+  const scale = useTransform(scrollYProgress, [0, 0.4, 0.6, 1], [0.85, 1, 1, 0.85]);
+  const opacity = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [0, 1, 1, 0]);
+  const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [30, 0, -30]);
+  const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
+
+  return (
+    <motion.section 
+      id={id}
+      ref={ref}
+      style={{ scale, opacity, rotateX, y, perspective: "1500px" }}
+      className={`relative min-h-[140vh] flex items-center justify-center py-40 ${className}`}
+    >
+      {children}
+    </motion.section>
+  );
+}
+
+const EXPERIENCES = [
+  { year: "2024", title: "Lead Architect", company: "StarFox" },
+  { year: "2023", title: "Systems Dev", company: "Wes" },
+  { year: "2022", title: "Visual Designer", company: "BlueMoon" }
 ];
 
 export default function App() {
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef
+  });
+
+  const heroY = useTransform(scrollYProgress, [0, 0.25], [0, -600]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
+
+  const contactScale = useTransform(scrollYProgress, [0.8, 1], [0.8, 1]);
+
   return (
-    <div className="relative min-h-screen">
-      {/* 3D Background - Hero */}
-      <section className="relative h-screen w-full flex flex-col justify-between p-8 md:p-12 overflow-hidden bg-bg">
-        <Face3D />
+    <div ref={containerRef} className="relative bg-bg text-ink scroll-smooth cursor-crosshair">
+      <Dock />
 
-        {/* Top Nav */}
-        <nav className="relative z-20 flex justify-between items-start">
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col"
-          >
-            <span className="font-display text-xl font-bold tracking-tighter">AURA.</span>
-            <span className="text-[10px] tracking-[0.3em] font-medium opacity-50 uppercase">Portfolio 2026</span>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex gap-8 text-[12px] font-medium tracking-widest uppercase opacity-80"
-          >
-            <a href="#work" className="hover:opacity-50 transition-opacity">Work</a>
-            <a href="#about" className="hover:opacity-50 transition-opacity">About</a>
-            <a href="#contact" className="hover:opacity-50 transition-opacity">Contact</a>
-          </motion.div>
-        </nav>
+      {/* Background Story Layer */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+        <FloatingPhrase text="ANTIGRAVITY SYSTEMS" initialPos={{ x: "10%", y: "80%" }} />
+        <FloatingPhrase text="LIQUID ARCHITECTURE" initialPos={{ x: "70%", y: "60%" }} />
+        <FloatingPhrase text="DIGITAL DYNAMICS" initialPos={{ x: "30%", y: "40%" }} />
+        <FloatingPhrase text="FLUID INTERFACES" initialPos={{ x: "80%", y: "20%" }} />
+      </div>
 
-        {/* Hero Text */}
-        <div className="relative z-20 pointer-events-none">
-          <div className="flex flex-col -space-y-4 md:-space-y-12">
-            <motion.h1 
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="text-[18vw] md:text-[14vw] font-display font-bold leading-none tracking-tighter pointer-events-none"
-            >
-              CRAFTING
-            </motion.h1>
-            <motion.div 
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="flex items-center justify-end"
-            >
-              <h1 className="text-[18vw] md:text-[14vw] font-display font-bold leading-none tracking-tighter text-outline pointer-events-none">
-                DIGITAL
-              </h1>
-            </motion.div>
-            <motion.h1 
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.8 }}
-              className="text-[18vw] md:text-[14vw] font-display font-bold leading-none tracking-tighter pointer-events-none"
-            >
-              AVATARS
-            </motion.h1>
-          </div>
-        </div>
+      {/* Hero Section */}
+      <section id="hero" className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden">
+        <motion.div 
+          style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
+          className="absolute inset-0 z-10"
+        >
+          <Face3D />
+        </motion.div>
 
-        {/* Hero Footer */}
-        <div className="relative z-20 flex justify-between items-end">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.6 }}
-            transition={{ delay: 1 }}
-            className="max-w-[280px]"
+        <div className="relative z-20 flex flex-col items-center pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center"
           >
-            <p className="text-sm font-light leading-relaxed">
-              Merging advanced geometry with emotive interaction to build the next generation of digital identity.
-            </p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 1.2, type: "spring" }}
-            className="hidden md:flex flex-col items-center gap-4"
-          >
-            <div className="w-px h-24 bg-gradient-to-b from-white/0 to-white/50" />
-            <ChevronDown className="w-4 h-4 opacity-50 animate-bounce" />
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="flex gap-4"
-          >
-            <Github className="w-5 h-5 opacity-50 hover:opacity-100 transition-opacity cursor-pointer" />
-            <Twitter className="w-5 h-5 opacity-50 hover:opacity-100 transition-opacity cursor-pointer" />
-            <Linkedin className="w-5 h-5 opacity-50 hover:opacity-100 transition-opacity cursor-pointer" />
+             <span className="text-xl font-display font-light opacity-30 lowercase mb-4 tracking-widest">jayas</span>
+             <h1 className="text-[26vw] font-display font-bold leading-none tracking-tighter mix-blend-difference drop-shadow-[0_0_50px_rgba(255,255,255,0.1)]">
+               Jayas
+             </h1>
           </motion.div>
         </div>
+
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.4 }}
+          transition={{ delay: 2 }}
+          className="absolute scroll-indicator bottom-12 flex flex-col items-center gap-4"
+        >
+          <div className="w-px h-20 bg-gradient-to-b from-white/0 via-white to-white/0" />
+          <span className="text-[10px] tracking-[0.8em] uppercase">Evolve</span>
+        </motion.div>
       </section>
 
-      {/* Selected Work */}
-      <section id="work" className="bg-bg py-32 px-8 md:px-24">
-        <div className="flex flex-col gap-24 max-w-7xl mx-auto">
-          <div className="flex justify-between items-end border-b border-white/10 pb-8">
-            <h2 className="text-6xl font-display font-bold tracking-tighter">SELECTED WORK</h2>
-            <span className="text-muted text-sm font-medium uppercase tracking-widest">(03)</span>
-          </div>
+      {/* Skills Orbit Section */}
+      <SectionReveal id="skills" className="flex-col">
+        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-10">
+            <h2 className="text-[30vw] font-display font-bold text-outline select-none">FLOW</h2>
+        </div>
+        <div className="relative z-10 w-full flex flex-col items-center glass p-8 md:p-24 rounded-[4rem] backdrop-blur-3xl mx-8 md:mx-24 max-w-[90vw]">
+           <div className="text-center mb-12">
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                className="inline-block p-4 rounded-full border border-white/10 mb-8"
+              >
+                <Code2 className="w-8 h-8 text-indigo-400" />
+              </motion.div>
+              <h3 className="text-lg tracking-[0.5em] font-light opacity-40 uppercase mb-4">Fluency</h3>
+              <p className="text-5xl md:text-7xl font-display font-bold tracking-tighter max-w-2xl mx-auto">
+                WHERE LOGIC TRANSFORMS INTO LIQUID.
+              </p>
+           </div>
+           <SkillsGrid />
+        </div>
+      </SectionReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {PROJECTS.map((project, i) => (
+      {/* Experience Stacking Section */}
+      <SectionReveal className="flex-col px-8">
+        <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-24">
+           <div>
+             <h2 className="text-6xl font-display font-bold tracking-tighter mb-12">LEGACY.</h2>
+             <div className="flex flex-col gap-px bg-white/5 border border-white/5 rounded-3xl overflow-hidden glass">
+                {EXPERIENCES.map((ex, i) => (
+                  <motion.div 
+                    key={i}
+                    whileHover={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                    className="p-12 flex justify-between items-center group cursor-pointer"
+                  >
+                    <div className="flex flex-col gap-2">
+                       <span className="text-xs font-mono opacity-40">{ex.year}</span>
+                       <h3 className="text-2xl font-display font-bold tracking-tight">{ex.title}</h3>
+                    </div>
+                    <div className="text-right">
+                       <span className="text-lg opacity-40 group-hover:opacity-100 transition-opacity">{ex.company}</span>
+                    </div>
+                  </motion.div>
+                ))}
+             </div>
+           </div>
+           <div className="flex flex-col justify-center gap-12">
+              <div className="glass p-12 rounded-[2rem] relative overflow-hidden group">
+                 <Zap className="absolute -right-8 -top-8 w-40 h-40 opacity-5 group-hover:rotate-12 transition-transform duration-1000" />
+                 <h4 className="text-sm tracking-[0.5em] opacity-40 uppercase mb-6">Philosophy</h4>
+                 <p className="text-2xl font-light leading-relaxed">
+                   High-performance code is just the skeleton. Emotive interaction is the soul. I build systems that feel alive.
+                 </p>
+              </div>
+              <div className="grid grid-cols-2 gap-8">
+                 <div className="glass p-8 rounded-2xl flex flex-col gap-4">
+                    <Globe className="w-6 h-6 text-indigo-400" />
+                    <span className="text-3xl font-display font-bold">50+</span>
+                    <span className="text-[10px] opacity-40 tracking-widest uppercase">Global Clients</span>
+                 </div>
+                 <div className="glass p-8 rounded-2xl flex flex-col gap-4">
+                    <Layers className="w-6 h-6 text-emerald-400" />
+                    <span className="text-3xl font-display font-bold">100k+</span>
+                    <span className="text-[10px] opacity-40 tracking-widest uppercase">Lines Written</span>
+                 </div>
+              </div>
+           </div>
+        </div>
+      </SectionReveal>
+
+      {/* Ventures Section */}
+      <SectionReveal id="work" className="px-8 md:px-24">
+        <div className="max-w-7xl w-full">
+          <div className="flex justify-between items-end mb-24 border-b border-white/5 pb-12">
+             <h2 className="text-7xl font-display font-bold tracking-tighter">VENTURES.</h2>
+             <Sparkles className="w-8 h-8 opacity-20" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {COMPANIES.map((co, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="group cursor-pointer"
+                whileHover={{ y: -20, scale: 1.05 }}
+                className="glass p-12 rounded-[3.5rem] group cursor-pointer relative"
               >
-                <div className="relative aspect-[4/5] overflow-hidden bg-white/5 mb-6">
-                  <img 
-                    src={project.image} 
-                    alt={project.title}
-                    className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 group-hover:scale-105 transition-all duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div 
+                  className="absolute bottom-0 left-0 right-0 h-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity mx-12 mb-8" 
+                  style={{ backgroundColor: co.color }}
+                />
+                <div className="flex justify-between items-start mb-24">
+                  <span className="text-[10px] font-mono opacity-40 tracking-widest">_VENTURE_{i+1}</span>
+                  <ExternalLink className="w-5 h-5 opacity-40" />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-2xl font-display font-bold tracking-tight">{project.title}</h3>
-                    <ArrowRight className="w-5 h-5 -rotate-45 group-hover:rotate-0 transition-transform" />
-                  </div>
-                  <div className="flex justify-between text-[11px] font-medium uppercase tracking-[0.2em] opacity-40">
-                    <span>{project.category}</span>
-                    <span>{project.year}</span>
-                  </div>
+                <div>
+                  <h3 className="text-4xl font-display font-bold tracking-tighter mb-4">{co.name}</h3>
+                  <p className="text-sm opacity-40 uppercase tracking-widest mb-6">{co.role}</p>
+                  <p className="text-base font-light leading-relaxed opacity-60">
+                    {co.desc}
+                  </p>
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </SectionReveal>
 
-      {/* About / Philosophy */}
-      <section id="about" className="bg-white text-black py-40 px-8 md:px-24">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-          <div>
-            <motion.h2 
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="text-7xl font-display font-bold tracking-tighter mb-12 leading-[0.9]"
-            >
-              I BELIEVE IN <br/> THE SYNERGY OF <br/> FORM & FUNCTION.
-            </motion.h2>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="text-xl font-light leading-relaxed max-w-lg mb-8"
-            >
-              Independent digital craftsman focusing on interactive experiences that challenge the status quo. By blending creative coding with human-centered design, I build interfaces that don't just work—they resonate.
-            </motion.p>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-3 px-8 py-4 bg-black text-white font-display font-bold tracking-wide rounded-full"
-            >
-              READ FULL STORY
-              <ArrowRight className="w-4 h-4" />
-            </motion.button>
-          </div>
-          <div className="relative">
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true }}
-              className="aspect-square bg-gray-100 rounded-2xl overflow-hidden shadow-2xl"
-            >
-               <img 
-                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=1200" 
-                className="w-full h-full object-cover"
-                alt="Workspace"
+      {/* Final Call – The Gravitational Core */}
+      <footer id="contact" className="relative min-h-[150vh] flex flex-col justify-center items-center overflow-hidden px-8">
+         <motion.div 
+           style={{ scale: contactScale }}
+           className="relative z-10 w-full max-w-7xl glass p-24 md:p-40 rounded-[5rem] flex flex-col items-center text-center gap-16 backdrop-blur-[100px]"
+         >
+            <div className="flex flex-col items-center">
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute w-[80%] aspect-square bg-indigo-500/20 rounded-full blur-[150px] -z-10"
               />
-            </motion.div>
-            <div className="absolute -bottom-8 -left-8 bg-black text-white p-8 w-48 h-48 flex flex-col justify-end">
-               <span className="text-4xl font-display font-bold leading-none mb-2">12+</span>
-               <span className="text-[10px] font-medium tracking-widest uppercase opacity-60">Global Awards won since 2021</span>
+              <h2 className="text-[10vw] font-display font-bold tracking-tighter leading-none mb-4 mix-blend-difference">SAY HELLO.</h2>
+              <p className="text-2xl font-light opacity-60">Architecting the next digital era.</p>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Footer / Contact */}
-      <footer id="contact" className="bg-bg pt-40 pb-12 px-8 md:px-24 overflow-hidden">
-        <div className="max-w-7xl mx-auto flex flex-col gap-24 relative">
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col items-center text-center"
-          >
-            <h2 className="text-[12vw] font-display font-bold tracking-tighter text-outline hover:text-white transition-colors duration-500 cursor-default mb-8">
-              SAY HELLO
-            </h2>
-            <p className="text-lg font-light opacity-60 mb-12">Available for select projects from August 2026</p>
             <a 
-              href="mailto:hello@aura.studio" 
-              className="text-4xl md:text-6xl font-display font-light underline decoration-1 underline-offset-8 decoration-white/20 hover:decoration-white transition-all"
+              href="mailto:hello@jayas.studio"
+              className="group relative px-20 py-10 glass rounded-full overflow-hidden hover:scale-110 active:scale-95 transition-all duration-500 shadow-[0_0_100px_rgba(255,255,255,0.05)]"
             >
-              hello@aura.studio
+               <motion.div 
+                 className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[0.16,1,0.3,1]"
+               />
+               <span className="relative z-10 group-hover:text-black font-display font-bold text-3xl tracking-tighter transition-colors">INITIATE CONNECTION</span>
             </a>
-          </motion.div>
 
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-12 border-t border-white/5 opacity-40 text-[10px] tracking-[0.3em] font-medium uppercase">
-            <span>© 2026 AURA STUDIO LTD.</span>
-            <div className="flex gap-12">
-              <a href="#" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
-              <a href="#" className="hover:opacity-100 transition-opacity">Terms of Service</a>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 pt-12 border-t border-white/5 w-full">
+               {["GitHub", "Twitter", "LinkedIn", "Behance"].map((social) => (
+                 <a key={social} href="#" className="text-[10px] tracking-[0.4em] uppercase font-bold opacity-30 hover:opacity-100 transition-all">
+                    {social}
+                 </a>
+               ))}
             </div>
-          </div>
-        </div>
+         </motion.div>
+         
+         <div className="absolute bottom-12 text-[8px] tracking-[1em] opacity-20 uppercase font-mono">
+            Antigravity // 2026 // Jayas Studio
+         </div>
       </footer>
     </div>
   );
 }
+

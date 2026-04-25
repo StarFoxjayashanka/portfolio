@@ -26,4 +26,12 @@
     -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
     color: transparent;
   }
+
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-dark {
+    @apply bg-black/20 backdrop-blur-2xl border border-white/5;
+  }
 }
