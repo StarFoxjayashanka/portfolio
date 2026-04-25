@@ -80,9 +80,9 @@ function Bubble({ lang, x, y, mouseX, mouseY }: { lang: typeof LANGUAGES[0], x: 
     return () => unsubX();
   }, [mouseX, x, y, distance, displacementX, displacementY]);
 
-  const scale = useTransform(distance, [0, 80, 500], [2.4, 1, 0.6]);
-  const opacity = useTransform(distance, [0, 450, 700], [1, 0.8, 0.15]);
-  const zIndex = useTransform(distance, [0, 100, 500], [250, 50, 1]);
+  const scale = useTransform(distance, [0, 100, 500], [2.5, 1.1, 0.55]);
+  const opacity = useTransform(distance, [0, 450, 800], [1, 0.85, 0.1]);
+  const zIndex = useTransform(distance, [0, 100, 500], [300, 50, 1]);
   
   const springScale = useSpring(scale, { damping: 30, stiffness: 250 });
   const springOpacity = useSpring(opacity, { damping: 30, stiffness: 200 });
@@ -117,7 +117,7 @@ function Bubble({ lang, x, y, mouseX, mouseY }: { lang: typeof LANGUAGES[0], x: 
           delay: Math.random() * 5,
           ease: "easeInOut"
         }}
-        className="w-1/2 h-1/2 flex items-center justify-center grayscale group-hover:grayscale-0 transition-opacity duration-700 pointer-events-none opacity-40 group-hover:opacity-100"
+        className="w-1/2 h-1/2 flex items-center justify-center grayscale group-hover:grayscale-0 transition-opacity duration-700 pointer-events-none opacity-70 group-hover:opacity-100"
         dangerouslySetInnerHTML={{ 
           __html: `<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-full h-full"><path d="${icon.path}"/></svg>` 
         }}
@@ -155,9 +155,10 @@ export default function SkillsGrid() {
     mouseY.set(-10000);
   };
 
-  const bubbles = useMemo(() => {
-    const cols = 18; // Even wider grid to fill section
+  const { bubbles, actualWidth, actualHeight } = useMemo(() => {
+    const cols = 12; // Adjusted for better density
     const items: any[] = [];
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     
     LANGUAGES.forEach((lang, i) => {
       const row = Math.floor(i / cols);
@@ -168,34 +169,44 @@ export default function SkillsGrid() {
       const y = row * (BUBBLE_SIZE + SPACING) * 0.866;
       
       items.push({ lang, x, y });
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x + BUBBLE_SIZE);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y + BUBBLE_SIZE);
     });
     
-    return items;
-  }, []);
+    const width = maxX - minX;
+    const height = maxY - minY;
 
-  const gridWidth = 18 * (BUBBLE_SIZE + SPACING);
-  const gridHeight = Math.ceil(LANGUAGES.length / 18) * (BUBBLE_SIZE + SPACING) * 0.866;
+    const centeredItems = items.map(item => ({
+      ...item,
+      x: item.x - minX,
+      y: item.y - minY
+    }));
+
+    return { bubbles: centeredItems, actualWidth: width, actualHeight: height };
+  }, []);
 
   return (
     <div 
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="w-full min-h-[120vh] relative flex items-center justify-center bg-black overflow-hidden py-60"
+      className="w-full min-h-screen relative flex items-center justify-center bg-black overflow-hidden py-40"
     >
       <div 
-        className="relative scale-95 md:scale-110 lg:scale-[1.2]"
+        className="relative scale-100 md:scale-110 lg:scale-[1.3]"
         style={{
-          width: gridWidth,
-          height: gridHeight,
+          width: actualWidth,
+          height: actualHeight,
         }}
       >
         {bubbles.map((item, i) => (
           <Bubble 
             key={i} 
             lang={item.lang} 
-            x={item.x - gridWidth / 2}
-            y={item.y - gridHeight / 2}
+            x={item.x}
+            y={item.y}
             mouseX={mouseX} 
             mouseY={mouseY} 
           />
@@ -220,7 +231,7 @@ export default function SkillsGrid() {
           translateX: '-50%', 
           translateY: '-50%' 
         }}
-        className="fixed top-0 left-0 w-44 h-44 rounded-full border border-white/20 pointer-events-none z-[300] backdrop-blur-[2px] bg-white/[0.01] shadow-[0_0_120px_rgba(255,255,255,0.05)] ring-1 ring-white/5"
+        className="fixed top-0 left-0 w-48 h-48 rounded-full border border-white/10 pointer-events-none z-[300] bg-transparent shadow-[0_0_100px_rgba(255,255,255,0.03)] ring-1 ring-white/5"
       >
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent" />
       </motion.div>
