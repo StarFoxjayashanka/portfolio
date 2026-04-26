@@ -88,6 +88,8 @@ function VentureCard({ co, i }: { co: typeof COMPANIES[0], i: number }) {
   const [isHovered, setIsHovered] = useState(false);
   const { scrollY } = useScroll();
   const [velocity, setVelocity] = useState(0);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -102,23 +104,49 @@ function VentureCard({ co, i }: { co: typeof COMPANIES[0], i: number }) {
     return () => cancelAnimationFrame(anim);
   }, []);
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - left) / width;
+    const y = (e.clientY - top) / height;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
   const skewX = useSpring(velocity * 0.05, { damping: 20, stiffness: 100 });
-  const scale = useSpring(isHovered ? 1.05 : 1, { damping: 15, stiffness: 100 });
+  const cardScale = useSpring(isHovered ? 1.05 : 1, { damping: 15, stiffness: 100 });
   
+  // Parallax movement for background
+  const xMove = useTransform(mouseX, [0, 1], [10, -10]);
+  const yMove = useTransform(mouseY, [0, 1], [10, -10]);
+  const bgScale = useTransform(mouseX, [0, 0.5, 1], [1.1, 1.2, 1.1]);
+
   return (
     <motion.div 
+      onMouseMove={handleMouseMove}
       onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
+      onHoverEnd={() => {
+        setIsHovered(false);
+        mouseX.set(0.5);
+        mouseY.set(0.5);
+      }}
       style={{
         skewX,
-        scale,
+        scale: cardScale,
         backgroundColor: isHovered ? `${co.color}15` : 'rgba(255,255,255,0.02)',
         borderColor: isHovered ? co.color : 'rgba(255,255,255,0.05)'
       }}
       className="relative w-[85vw] md:w-[70vw] h-full glass rounded-[5rem] group cursor-pointer overflow-hidden transition-all duration-700 shadow-3xl"
     >
-      <div className="absolute inset-0 z-0">
-         <img src={co.bg} className={`w-full h-full object-cover grayscale transition-all duration-1000 ${isHovered ? 'scale-110 grayscale-0 opacity-40' : 'opacity-10'}`} />
+      <div className="absolute inset-0 z-0 overflow-hidden">
+         <motion.img 
+            src={co.bg} 
+            style={{ 
+              x: isHovered ? xMove : 0, 
+              y: isHovered ? yMove : 0,
+              scale: isHovered ? bgScale : 1
+            }}
+            className={`w-full h-full object-cover grayscale transition-all duration-1000 ${isHovered ? 'grayscale-0 opacity-40' : 'opacity-10'}`} 
+         />
          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
       </div>
 
@@ -169,24 +197,28 @@ function VentureCard({ co, i }: { co: typeof COMPANIES[0], i: number }) {
   );
 }
 
-function FloatingPhrase({ text, initialPos }: { text: string, initialPos: { x: string, y: string } }) {
+function FloatingPhrase({ text, initialPos, scrollRange = [0, 1000, 3000] }: { text: string, initialPos: { x: string, y: string }, scrollRange?: number[] }) {
   const { scrollY } = useScroll();
-  const yParallax = useTransform(scrollY, [0, 3000], [0, (Math.random() - 0.5) * 500]);
+  const yParallax = useTransform(scrollY, [0, 4000], [0, (Math.random() - 0.5) * 800]);
+  const scrollOpacity = useTransform(scrollY, scrollRange, [0, 0.4, 0]);
+  const springOpacity = useSpring(scrollOpacity, { stiffness: 100, damping: 30 });
   
   return (
     <motion.div
-      initial={{ x: initialPos.x, opacity: 0 }}
+      initial={{ x: initialPos.x }}
       animate={{ 
-        y: ["0%", "-30%"],
-        opacity: [0, 0.4, 0] 
+        y: ["0%", "-40%"],
       }}
       transition={{ 
-        duration: 12 + Math.random() * 15,
+        duration: 20 + Math.random() * 20,
         repeat: Infinity,
         ease: "linear"
       }}
-      style={{ y: yParallax }}
-      className="absolute pointer-events-none text-[7px] tracking-[2em] uppercase font-bold font-outline whitespace-nowrap z-0 select-none"
+      style={{ 
+        y: yParallax,
+        opacity: springOpacity
+      }}
+      className="absolute pointer-events-none text-[8px] tracking-[2.5em] uppercase font-bold font-outline whitespace-nowrap z-0 select-none"
     >
       {text}
     </motion.div>
@@ -273,10 +305,10 @@ export default function App() {
 
       {/* Background Story Layer */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-        <FloatingPhrase text="STARFOX // DEVELOP" initialPos={{ x: "5%", y: "70%" }} />
-        <FloatingPhrase text="WES // ARCHITECTURE" initialPos={{ x: "85%", y: "40%" }} />
-        <FloatingPhrase text="BLUEMOON // DESIGN" initialPos={{ x: "25%", y: "20%" }} />
-        <FloatingPhrase text="YAKKHA ENERGY" initialPos={{ x: "60%", y: "90%" }} />
+        <FloatingPhrase text="STARFOX // DEVELOP" initialPos={{ x: "5%", y: "70%" }} scrollRange={[0, 800, 1600]} />
+        <FloatingPhrase text="WES // ARCHITECTURE" initialPos={{ x: "85%", y: "40%" }} scrollRange={[1000, 2000, 3000]} />
+        <FloatingPhrase text="BLUEMOON // DESIGN" initialPos={{ x: "25%", y: "20%" }} scrollRange={[2000, 3500, 5000]} />
+        <FloatingPhrase text="YAKKHA ENERGY" initialPos={{ x: "60%", y: "90%" }} scrollRange={[500, 2500, 4500]} />
       </div>
 
       {/* Hero Section */}
@@ -304,12 +336,22 @@ export default function App() {
 
         <motion.div 
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
+          animate={{ opacity: 0.6 }}
           transition={{ delay: 2 }}
           className="absolute scroll-indicator bottom-12 flex flex-col items-center gap-4"
         >
-          <div className="w-px h-20 bg-gradient-to-b from-white/0 via-white to-white/0" />
-          <span className="text-[10px] tracking-[0.8em] uppercase">Evolve</span>
+          <div className="relative group">
+            <motion.div 
+              animate={{ 
+                height: [40, 100, 40],
+                opacity: [0.3, 1, 0.3]
+              }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="w-px bg-gradient-to-b from-white/0 via-white to-white/0 shadow-[0_0_15px_rgba(255,255,255,0.8)]" 
+            />
+            <div className="absolute inset-0 w-px h-full bg-white blur-[4px] opacity-40 animate-pulse" />
+          </div>
+          <span className="text-[10px] tracking-[1em] uppercase font-medium opacity-60">Evolve</span>
         </motion.div>
       </section>
 
@@ -339,7 +381,6 @@ export default function App() {
 
       <Marquee text="INNOVATE • DISRUPT • EVOLVE • COLLIDE" speed={30} className="bg-white/5 py-20" />
 
-      {/* Creative Ethos - Perspective Reveal */}
       <SectionReveal className="px-8 overflow-hidden">
         <div className="max-w-7xl w-full glass p-24 md:p-40 rounded-[6rem] relative">
           <div className="absolute top-12 right-12 opacity-5 text-[20vw] font-bold font-display pointer-events-none select-none">
@@ -347,17 +388,44 @@ export default function App() {
           </div>
           <div className="relative z-10 flex flex-col gap-12">
             <h2 className="text-7xl md:text-9xl font-display font-bold tracking-tighter leading-[0.8]">
-              THE CODE<br/>IS LIQUID.
+              {["THE CODE", "IS LIQUID."].map((line, i) => (
+                <div key={i} className="overflow-hidden">
+                  <motion.span
+                    initial={{ y: "100%" }}
+                    whileInView={{ y: 0 }}
+                    viewport={{ once: false }}
+                    transition={{ 
+                      duration: 1.2, 
+                      delay: i * 0.2, 
+                      ease: [0.16, 1, 0.3, 1] 
+                    }}
+                    className="block"
+                  >
+                    {line}
+                  </motion.span>
+                </div>
+              ))}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-24 items-end">
-              <p className="text-2xl font-light leading-relaxed max-w-xl opacity-60">
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 0.6, x: 0 }}
+                transition={{ duration: 1, delay: 0.5 }}
+                className="text-2xl font-light leading-relaxed max-w-xl"
+              >
                  From the Yakkha-inspired raw power of StarFox to the tranquil depths of BlueMoon, my work exists in the tension between technical rigidity and organic grace.
-              </p>
+              </motion.p>
               <div className="flex flex-col gap-6 items-end">
                  {["Creative Direction", "Systems Design", "Visual Dynamics"].map((s, i) => (
-                   <span key={i} className="text-xs tracking-[0.5em] uppercase font-bold border-r-4 border-white pr-8 py-2 hover:translate-x-4 transition-transform cursor-pointer">
+                   <motion.span 
+                    key={i}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8, delay: 0.6 + (i * 0.1) }}
+                    className="text-xs tracking-[0.5em] uppercase font-bold border-r-4 border-white pr-8 py-2 hover:translate-x-4 transition-transform cursor-pointer"
+                   >
                      {s}
-                   </span>
+                   </motion.span>
                  ))}
               </div>
             </div>

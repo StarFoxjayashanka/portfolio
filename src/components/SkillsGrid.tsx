@@ -80,14 +80,14 @@ function Bubble({ lang, x, y, mouseX, mouseY }: { lang: typeof LANGUAGES[0], x: 
     return () => unsubX();
   }, [mouseX, x, y, distance, displacementX, displacementY]);
 
-  const scale = useTransform(distance, [0, 100, 500], [2.5, 1.1, 0.55]);
-  const opacity = useTransform(distance, [0, 450, 800], [1, 0.85, 0.1]);
-  const zIndex = useTransform(distance, [0, 100, 500], [300, 50, 1]);
+  const scale = useTransform(distance, [0, 80, 500], [2.6, 1.1, 0.5]);
+  const opacity = useTransform(distance, [0, 400, 850], [1, 0.9, 0.05]);
+  const zIndex = useTransform(distance, [0, 100, 500], [400, 50, 1]);
   
-  const springScale = useSpring(scale, { damping: 30, stiffness: 250 });
+  const springScale = useSpring(scale, { damping: 35, stiffness: 300 });
   const springOpacity = useSpring(opacity, { damping: 30, stiffness: 200 });
-  const springX = useSpring(displacementX, { damping: 35, stiffness: 180 });
-  const springY = useSpring(displacementY, { damping: 35, stiffness: 180 });
+  const springX = useSpring(displacementX, { damping: 40, stiffness: 200 });
+  const springY = useSpring(displacementY, { damping: 40, stiffness: 200 });
 
   return (
     <motion.div
@@ -105,19 +105,19 @@ function Bubble({ lang, x, y, mouseX, mouseY }: { lang: typeof LANGUAGES[0], x: 
         width: BUBBLE_SIZE,
         height: BUBBLE_SIZE,
       }}
-      className="absolute flex items-center justify-center rounded-full glass group cursor-none bg-white/[0.03] backdrop-blur-xl border border-white/5 shadow-3xl transition-all duration-700 hover:border-white/40"
+      className="absolute flex items-center justify-center rounded-full glass group cursor-none bg-white/[0.02] backdrop-blur-md border border-white/5 shadow-3xl transition-colors duration-700 hover:border-white/30"
     >
       <motion.div 
         animate={{ 
-          scale: [1, 1.1, 1],
+          scale: [1, 1.08, 1],
         }}
         transition={{ 
-          duration: 6, 
+          duration: 8, 
           repeat: Infinity, 
           delay: Math.random() * 5,
           ease: "easeInOut"
         }}
-        className="w-1/2 h-1/2 flex items-center justify-center grayscale group-hover:grayscale-0 transition-opacity duration-700 pointer-events-none opacity-70 group-hover:opacity-100"
+        className="w-1/2 h-1/2 flex items-center justify-center grayscale group-hover:grayscale-0 transition-opacity duration-700 pointer-events-none opacity-60 group-hover:opacity-100"
         dangerouslySetInnerHTML={{ 
           __html: `<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-full h-full"><path d="${icon.path}"/></svg>` 
         }}
@@ -126,16 +126,16 @@ function Bubble({ lang, x, y, mouseX, mouseY }: { lang: typeof LANGUAGES[0], x: 
       <motion.div 
         animate={{ 
           opacity: isHovered ? 1 : 0,
-          y: isHovered ? -18 : 0,
+          y: isHovered ? -20 : 0,
           scale: isHovered ? 1 : 0.8
         }}
-        className="absolute -top-14 px-5 py-2 bg-white text-black text-[10px] font-bold tracking-[0.5em] uppercase rounded-full shadow-[0_25px_60px_rgba(0,0,0,0.6)] pointer-events-none z-[160] whitespace-nowrap border border-white/20"
+        className="absolute -top-16 px-5 py-2 bg-white text-black text-[10px] font-bold tracking-[0.6em] uppercase rounded-full shadow-[0_30px_70px_rgba(0,0,0,0.7)] pointer-events-none z-[410] whitespace-nowrap border border-white/10"
       >
         {icon.title}
       </motion.div>
 
       {/* Surface caustic effect */}
-      <div className="absolute inset-x-2 top-2 h-1/4 bg-white/10 blur-[2px] rounded-full rotate-[-30deg] pointer-events-none group-hover:opacity-100 opacity-40 transition-opacity duration-700" />
+      <div className="absolute inset-x-2 top-2 h-1/4 bg-white/5 blur-[3px] rounded-full rotate-[-30deg] pointer-events-none group-hover:opacity-80 opacity-20 transition-opacity duration-700" />
     </motion.div>
   );
 }
@@ -156,7 +156,7 @@ export default function SkillsGrid() {
   };
 
   const { bubbles, actualWidth, actualHeight } = useMemo(() => {
-    const cols = 12; // Adjusted for better density
+    const cols = 16; 
     const items: any[] = [];
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     
@@ -192,10 +192,10 @@ export default function SkillsGrid() {
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="w-full min-h-screen relative flex items-center justify-center bg-black overflow-hidden py-40"
+      className="w-full min-h-screen relative flex items-center justify-center bg-black overflow-hidden py-60"
     >
       <div 
-        className="relative scale-100 md:scale-110 lg:scale-[1.3]"
+        className="relative scale-90 md:scale-100 lg:scale-[1.1] xl:scale-[1.2]"
         style={{
           width: actualWidth,
           height: actualHeight,
@@ -216,11 +216,11 @@ export default function SkillsGrid() {
       <div className="absolute inset-0 z-0 opacity-20 pointer-events-none overflow-hidden">
         <motion.div 
            animate={{ 
-             scale: [1, 1.2, 1],
-             opacity: [0.1, 0.3, 0.1]
+             scale: [1, 1.3, 1],
+             opacity: [0.1, 0.4, 0.1]
            }}
-           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160vw] h-[160vh] bg-gradient-radial from-violet-600/30 via-sky-500/5 to-transparent blur-[120px]" 
+           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180vw] h-[180vh] bg-gradient-radial from-violet-600/20 via-sky-500/5 to-transparent blur-[140px]" 
         />
       </div>
 
@@ -231,9 +231,9 @@ export default function SkillsGrid() {
           translateX: '-50%', 
           translateY: '-50%' 
         }}
-        className="fixed top-0 left-0 w-48 h-48 rounded-full border border-white/10 pointer-events-none z-[300] bg-transparent shadow-[0_0_100px_rgba(255,255,255,0.03)] ring-1 ring-white/5"
+        className="fixed top-0 left-0 w-36 h-36 rounded-full border border-white/5 pointer-events-none z-[450] bg-white/[0.01] shadow-[0_0_150px_rgba(255,255,255,0.05)] ring-1 ring-white/10"
       >
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent" />
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/5 to-transparent backdrop-blur-[0.5px]" />
       </motion.div>
     </div>
   );
